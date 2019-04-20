@@ -1,1 +1,161 @@
+#Syntax
+
+"VALUE-FOR / FILTER
+TYPES :
+  BEGIN OF type,
+    tabnr TYPE hrt1002-tabnr,
+    tline TYPE hrt1002-tline,
+  END OF type.
+
+DATA:
+table TYPE STANDARD TABLE OF type
+      WITH NON-UNIQUE SORTED KEY k01
+                      COMPONENTS tabnr.
+
+DATA(l_value1) = REDUCE string( INIT lv_text = CONV string( '' )
+                 FOR <fs_field> IN table
+                 NEXT lv_text = lv_text && replace(
+                      val =  <fs_field>-tline
+                      sub = cl_abap_char_utilities=>horizontal_tab
+                      with = ``
+                      occ = 0 ) ).
+DATA(l_data) = '123'.
+DATA(table) = FILTER #( table
+              USING KEY k01
+              WHERE tabnr EQ l_data ).
+
+DATA(l_value2) = REDUCE string( INIT l_text = CONV string( '' )
+                 FOR <fs_filter> IN table
+                 USING KEY k01
+                 NEXT lv_text = l_text && replace(
+                     val =  <fs_filter>-tline
+                     sub = cl_abap_char_utilities=>horizontal_tab
+                     with = ``
+                     occ = 0 ) ).					  
+REPLACE ALL OCCURRENCES OF SUBSTRING '#'
+IN l_value2-field WITH space.
+
+TYPES:
+  BEGIN OF type_1,
+    matnr TYPE matnr,
+    lifnr TYPE elifn,
+  END OF type_1,
+  ttype_1 TYPE STANDARD TABLE OF type_1
+          WITH EMPTY KEY,
+  type_range TYPE RANGE OF matnr.
+
+DATA:
+  table1  TYPE ttype_1,
+  table2  TYPE STANDARD TABLE OF DDIC_TABLE.
+
+DATA(range_1) = VALUE ttype_1(
+                     FOR <fs_temp> IN table2
+                     ( sign = 'I' 
+					             option = 'EQ'
+                       low = <fs_temp>-matnr ) ).
+
+DATA(table_temp) = VALUE ttype_1(
+                   FOR <fs_temp> IN table2
+                   ( matnr = |{ <fs_temp>-matnr ALPHA = IN }| ) ).
+					 
+-------------------------------------------------------------------
+"GROUP-BY
+LOOP AT table ASSIGNING FIELD-SYMBOL(<fs_table>)
+    GROUP BY ( vbeln = <fs_table>-vbeln )
+    ASSIGNING FIELD-SYMBOL(<table2>).
+	LOOP AT GROUP <table2> ASSIGNING FIELD-SYMBOL(<fs_table2>).
+	ENDLOOP.
+ENDLOOP.
+
+ASSIGN table[ KEY ko1
+                vbeln = <fs_table>-vbeln ] 
+		        TO FIELD-SYMBOL(<fs_table>).
+        IF sy-subrc NE 0.
+          CONTINUE.
+        ENDIF.
+
+-------------------------------------------------------------------
+"LINE_EXISTS
+IF NOT line_exists( table[ KEY k01
+                               vbeln   = l_vbeln
+                               vbelp   = l_vbelp
+                               count   = 0 ] ).
+ENDIF.
+
+-------------------------------------------------------------------
+"NUMBERS
+DATA(l_value) = CONV omeng( '23.233' ).
+round( val = '23.233' ).
+DATA(l_value2) = CONV omeng( '23.533' ).
+DATA(val2) = ceil( l_value2 ).
+
+DATA(l_num1)  = |{ round( val = '23.533' dec = 0 mode = cl_abap_math=>round_half_up ) }|.
+DATA(l_num2)  = |{ round( val = '23.433' dec = 0 mode = cl_abap_math=>round_half_up ) }|.
+
+
+DATA(l_legth) = CONV i( STRLEN( l_number ) - 1 ).
+
+DATA: l_val TYPE brtwr_fp.
+
+l_val = 10500.
+l_val = COND brtwr( WHEN l_val GT 0
+                    THEN ( l_val * -1 )
+                    ELSE l_val ).
+					
+DATA(l_value) = VALUE char04( r_value[ 1 ]-low OPTIONAL ).
+CONCATENATE l_value
+            '500'
+       INTO DATA(l_field).					
+       
+-------------------------------------------------------------------
+"Calling Class in a program
+   
+"Not Static/ Instance Method
+ DATA(lo_temp) = NEW lcl_class( ).
+ lo_temp->set_column_properties(
+   CHANGING
+     io_alv = lo_salv_tab
+ ).
+
+ "Static Method
+ lcl_class=>set_column_properties(
+   CHANGING
+     io_alv = lo_salv_tab
+ ). 
+	
+	
+-------------------------------------------------------------------
+"Run in Background
+END-OF-SELECTION.
+IF sy-batch EQ abap_true.
+   DATA ref_alv TYPE REF TO cl_salv_table.
+   TRY.
+      cl_salv_table=>factory(
+      EXPORTING
+        list_display = abap_true
+      IMPORTING
+        r_salv_table = ref_alv
+      CHANGING
+        t_table = final_table ).
+   CATCH cx_salv_msg.	"#EC NO_HANDLER
+	  "MESSAGE
+   ENDTRY.
+   ref_alv->display( ).
+ELSE.
+  CALL SCREEN 9000.
+ENDIF.
+
+
+-------------------------------------------------------------------
+FM:RS_HDSYS_CALL_TC_VARIANT (Bypass Tcode Auth Access)
+
+Knowing the BADI
+Class: Table SXC_CLASS
+Interface: Table SXS_INTER
+
+	
+
+
+
+
 
