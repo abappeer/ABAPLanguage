@@ -92,7 +92,6 @@ DATA(val2) = ceil( l_value2 ).
 DATA(l_num1)  = |{ round( val = '23.533' dec = 0 mode = cl_abap_math=>round_half_up ) }|.
 DATA(l_num2)  = |{ round( val = '23.433' dec = 0 mode = cl_abap_math=>round_half_up ) }|.
 
-
 DATA(l_legth) = CONV i( STRLEN( l_number ) - 1 ).
 
 DATA: l_val TYPE brtwr_fp.
@@ -105,7 +104,7 @@ l_val = COND brtwr( WHEN l_val GT 0
 DATA(l_value) = VALUE char04( r_value[ 1 ]-low OPTIONAL ).
 CONCATENATE l_value
             '500'
-       INTO DATA(l_field).					
+ INTO DATA(l_field).					
        
 -------------------------------------------------------------------
 "Calling Class in a program
@@ -122,7 +121,6 @@ CONCATENATE l_value
    CHANGING
      io_alv = lo_salv_tab
  ). 
-	
 	
 -------------------------------------------------------------------
 "Run in Background
@@ -145,15 +143,11 @@ ELSE.
   CALL SCREEN 9000.
 ENDIF.
 
+-------------------------------------------------------------------
+
 
 -------------------------------------------------------------------
-FM:RS_HDSYS_CALL_TC_VARIANT (Bypass Tcode Auth Access)
 
-Knowing the BADI
-Class: Table SXC_CLASS
-Interface: Table SXS_INTER
-
-	
 
 
 
